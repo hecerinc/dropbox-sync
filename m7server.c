@@ -224,8 +224,11 @@ void saveToFile(Action * action) {
 void deleteFile(Action * action) { 
 	// Get filename
 	size_t length = action->nameLength;
-	char * filename = malloc(length + 1);
-	strcpy(filename, action->payload);
+	size_t destinationLength = strlen(destination);
+
+	char * filename = malloc(destinationLength + length + 1);
+	strcpy(filename, destination);
+	strcpy(&filename[destinationLength], action->payload);
 
 	if(unlink(filename) == 0) {
 		printf("Successfully deleted %s\n", filename);
