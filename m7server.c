@@ -150,6 +150,7 @@ Action * handler(int clientSocket) {
 		exit(1);
 	}
 	payload_size = ntohl(payload_size);
+	printf("Received payload size: %d\n", payload_size);
 	buffer = malloc(payload_size);
 
 	// Receive message
@@ -179,16 +180,10 @@ void saveToFile(Action * action) {
 	char * filename = malloc(length + 1);
 	char * p = action->payload;
 
-	size_t pos = 0;
+	size_t pos = action->payloadSize;
 
-	// Look for record separator
-	while(*p != 30) {
-		p++;
-		pos++;
-	}
 	// Payload in 0 - (pos -1)
-	p++;
-	strncpy(filename, p, length);
+	strncpy(filename, (p+pos+1), length);
 	filename[length] = '\0';
 
 

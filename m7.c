@@ -208,6 +208,7 @@ void sendFileToServer(char * filename) {
 	char * finalString;
 
 	size_t dataSize = fileData->size + strlen(filename) + 2; // 1 para el record separator
+	printf("Size of payload in bytes: %lu\n", fileData->size);
 
 	finalString = malloc(dataSize);
 
@@ -218,6 +219,7 @@ void sendFileToServer(char * filename) {
 
 	Action * action = createAction(finalString, dataSize);
 	action->nameLength = strlen(filename);
+	action->payloadSize = fileData->size;
 	action->type = WRITE;
 	
 	// send the action!

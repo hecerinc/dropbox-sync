@@ -17,6 +17,7 @@ struct action_s {
 	action_type type;
 	unsigned _lengthInBytes;
 	size_t nameLength;
+	size_t payloadSize;
 	char payload[1];
 	// size_t payloadSize;
 	// payload format: 
