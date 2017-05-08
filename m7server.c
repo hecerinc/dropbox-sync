@@ -7,9 +7,12 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include "readBytes.h"
+#include <errno.h>
 
 Action * handler(int);
 void saveToFile(Action *);
+void deleteFile(Action *);
+void renameFile(Action *);
 
 char * destination; // Destination directory
 
@@ -105,9 +108,22 @@ int main(int argc, char * argv[]) {
 		printf("Filename length: %lu\n", a->nameLength);
 		printf("\n");
 		
+		switch(a->type) {
+			case WRITE:
+				saveToFile(a);
+				break;
+			case DELETE:
+				deleteFile(a);
+				break;
+			case RENAME:
+				renameFile(a);
+				break;
+			default: 
+				fprintf(stderr, "Unsupported action type\n");
+				break;
+		}
 
 		// Save the action
-		saveToFile(a);
 
 		free(a);
 	}
@@ -174,20 +190,12 @@ void saveToFile(Action * action) {
 	p++;
 	strncpy(filename, p, length);
 	filename[length] = '\0';
-	// filename[action->nameLength] = '\0';
-	// p = filename;
-	// while(*p != '\0'){
-	// 	printf("%c\n", *p);
-	// 	p++;
-	// }
-	// printf("Si llego bien\n");
 
 
 	printf("Filename: %s\n", filename);
 
 	char * fullpath = (char *)malloc((strlen(destination) + length + 1)*sizeof(char));
 	strcpy(fullpath, destination);
-	// strcat(fullpath, "/");
 	strcat(fullpath, filename);
 
 	FILE * outfile = fopen(fullpath, "wb");
@@ -210,6 +218,53 @@ void saveToFile(Action * action) {
 	filename = NULL;
 	fullpath = NULL;
 
+
+}
+
+void deleteFile(Action * action) { 
+	// Get filename
+	size_t length = action->nameLength;
+	char * filename = malloc(length + 1);
+	strcpy(filename, action->payload);
+
+	if(unlink(filename) == 0) {
+		printf("Successfully deleted %s\n", filename);
+	}
+	else {
+		fprintf(stderr, "Could not delete %s\n", filename);
+	}
+	free(filename);
+}
+void renameFile(Action * action) {
+	size_t lengthOfNewName = action->nameLength;
+	size_t lengthOfDestination = strlen(destination);
+
+	char *p = action->payload;
+	char *newname = malloc(lengthOfDestination + lengthOfNewName + 1);
+	int pos = 0;
+	while(*p != 30) {
+		p++;
+		pos++;
+	}
+	char * oldname = malloc(lengthOfDestination + pos + 1);
+	strcpy(oldname, destination);
+	memcpy(&oldname[lengthOfDestination], action->payload, pos);
+	oldname[lengthOfDestination + pos] = '\0';
+	printf("Old name: %s\n", oldname);
+
+	strcpy(newname, destination);
+	p++;
+	strncpy(&newname[lengthOfDestination], p, lengthOfNewName);
+	newname[lengthOfDestination + lengthOfNewName] = '\0';
+	printf("New name: %s\n", newname);
+
+	if(rename(oldname, newname) != -1)
+		printf("Successfully renamed: %s -> %s\n", oldname, newname);
+	else
+		fprintf(stderr, "Could not rename %s\n", oldname);
+
+	free(oldname);
+	free(newname);
 
 }
 

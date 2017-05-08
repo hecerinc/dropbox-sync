@@ -238,9 +238,31 @@ void sendFileToServer(char * filename) {
 }
 void deleteFileFromServer(const char * filename) {
 	printf("Deleting file from server: %s\n", filename);
+	Action * action = createAction(filename, strlen(filename)+1);
+	action->type = DELETE;
+	action->nameLength = strlen(filename);
+	sendPayload(action);
+	free(action);
 }
 void renameFileOnServer(const char * oldname, const char * newname) {
 	printf("Renaming file on server: %s -> %s\n", oldname, newname);
+
+	size_t lenold = strlen(oldname);
+	size_t length = lenold + strlen(newname) + 1;
+
+	char * finalString = malloc(length); // record separator
+	strcpy(finalString, oldname);
+	finalString[lenold] = 30;
+	strcpy(&finalString[lenold+1], newname);
+
+	Action * action = createAction(finalString, length);
+	action->type = RENAME;
+	action->nameLength = strlen(newname);
+
+	sendPayload(action);
+
+	free(action);
+	free(finalString);
 } 
 
 // #define RESPONSEBUFFER 10
